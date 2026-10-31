@@ -590,6 +590,32 @@ h1, h2, h3, h4, h5, h6 {
   border-top-color: var(--border-subtle) !important;
 }
 
+/* Utility Overrides for Dark Mode */
+.bg-light {
+  background-color: rgba(18, 27, 48, 0.65) !important;
+  color: #cbd5e1 !important;
+}
+
+.text-dark {
+  color: #ffffff !important;
+}
+
+.border {
+  border-color: var(--border-subtle) !important;
+}
+
+.list-group-item {
+  background-color: transparent !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-main) !important;
+}
+
+.modal-content {
+  background-color: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border-card) !important;
+  color: var(--text-main) !important;
+}
+
 /* Footer */
 footer {
   margin-top: auto;
