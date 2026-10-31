@@ -18,8 +18,20 @@
     <div class="sidebar-section-title">Overview</div>
     <a href="{% url 'dashboard:index' %}" class="sidebar-link {% if request.resolver_match.app_name == 'dashboard' and request.resolver_match.url_name == 'index' %}active{% endif %}">
       <i class="bi bi-grid-1x2"></i>
-      <span>Dashboard</span>
+      <span>{% if user.is_admin_role %}Overview{% elif user.is_staff_role %}My Workbench{% else %}Dashboard{% endif %}</span>
     </a>
+    {% if user.is_admin_role %}
+    <a href="{% url 'dashboard:admin_hub' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_hub' %}active{% endif %}">
+      <i class="bi bi-speedometer2"></i>
+      <span>Executive Hub</span>
+    </a>
+    {% endif %}
+    {% if user.is_staff_role %}
+    <a href="{% url 'dashboard:staff_workbench' %}" class="sidebar-link {% if request.resolver_match.url_name == 'staff_workbench' %}active{% endif %}">
+      <i class="bi bi-kanban"></i>
+      <span>Staff Workbench</span>
+    </a>
+    {% endif %}
 
     <!-- Section: Operations -->
     <div class="sidebar-section-title">Operations</div>

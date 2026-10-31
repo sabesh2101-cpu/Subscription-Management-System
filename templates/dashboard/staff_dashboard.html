@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Operations &amp; Billing Workbench{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+  <div>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <h3 class="fw-bold text-white mb-0">Staff Operations &amp; Billing Workbench</h3>
+      <span class="badge role-badge-staff px-2 py-1"><i class="bi bi-shield-check me-1"></i> Staff Workspace</span>
+    </div>
+    <p class="text-muted small mb-0">Daily action queue for invoice collection follow-ups, upcoming subscription renewals, and payments</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'subscriptions:subscription_create' %}" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+      <i class="bi bi-plus-lg"></i> New Subscription
+    </a>
+    <a href="{% url 'billing:invoice_create' %}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+      <i class="bi bi-receipt"></i> Issue Invoice
+    </a>
+  </div>
+</div>
+
+<!-- Operational Metric Cards -->
+<div class="row g-3 mb-4">
+  <!-- Invoices Requiring Follow-Up -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card" style="border-top: 3px solid #f59e0b;">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Pending Collections</span>
+        <div class="kpi-icon-wrap" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);">
+          <i class="bi bi-clock-history"></i>
+        </div>
+      </div>
+      <div class="display-6 fw-bold mb-1" style="color: #ffffff;">{{ workbench.unpaid_count }}</div>
+      <div class="small" style="color: #94a3b8;">
+        Total: <strong class="text-white">${{ workbench.total_unpaid_amount }}</strong> unpaid
+      </div>
+    </div>
+  </div>
+
+  <!-- Overdue Invoices Alert -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card" style="border-top: 3px solid #f43f5e;">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Overdue Receivables</span>
+        <div class="kpi-icon-wrap" style="background: rgba(244, 63, 94, 0.15); color: #fb7185; border-color: rgba(244, 63, 94, 0.3);">
+          <i class="bi bi-exclamation-octagon"></i>
+        </div>
+      </div>
+      <div class="display-6 fw-bold mb-1" style="color: #fb7185;">{{ workbench.overdue_count }}</div>
+      <div class="small" style="color: #94a3b8;">
+        Amount: <strong style="color: #fb7185;">${{ workbench.total_overdue_amount }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subscriptions Up for Renewal Soon -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card" style="border-top: 3px solid #06b6d4;">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Renewals Due &le; 14 Days</span>
+        <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8; border-color: rgba(6, 182, 212, 0.3);">
+          <i class="bi bi-arrow-repeat"></i>
+        </div>
+      </div>
+      <div class="display-6 fw-bold mb-1" style="color: #ffffff;">{{ workbench.upcoming_billing_count }}</div>
+      <div class="small" style="color: #94a3b8;">
+        Subscriptions ready for invoicing
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Collections -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card" style="border-top: 3px solid #10b981;">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Month Collections</span>
+        <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
+          <i class="bi bi-cash-coin"></i>
+        </div>
+      </div>
+      <div class="display-6 fw-bold mb-1" style="color: #ffffff;">${{ workbench.month_collections }}</div>
+      <div class="small" style="color: #94a3b8;">
+        Today: <strong style="color: #34d399;">+${{ workbench.today_collections }}</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Queues (2 Panels) -->
+<div class="row g-4 mb-4">
+  <!-- Panel 1: Invoices To Follow Up -->
+  <div class="col-lg-6">
+    <div class="table-card h-100">
+      <div class="card-header-bar p-3 border-bottom border-secondary-subtle d-flex align-items-center justify-content-between">
+        <div>
+          <h5 class="fw-bold text-white mb-0"><i class="bi bi-receipt me-2 text-warning"></i>Invoices Action Queue</h5>
+          <span class="text-muted small">Unpaid and overdue accounts requiring collection</span>
+        </div>
+        <a href="{% url 'billing:invoice_list' %}?status=OVERDUE" class="small text-decoration-none fw-semibold" style="color: #818cf8;">
+          View All &rarr;
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Customer</th>
+              <th>Due Date</th>
+              <th>Balance</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in workbench.unpaid_invoices %}
+            <tr>
+              <td>
+                <a href="{% url 'billing:invoice_detail' inv.pk %}" class="fw-bold text-decoration-none" style="color: #818cf8;">
+                  {{ inv.invoice_number }}
+                </a>
+              </td>
+              <td>
+                <span class="text-white fw-semibold d-block text-truncate" style="max-width: 140px;">
+                  {{ inv.subscription.customer.get_full_name|default:inv.subscription.customer.username }}
+                </span>
+                <span class="text-muted small" style="font-size: 0.72rem;">{{ inv.subscription.plan.name }}</span>
+              </td>
+              <td>
+                <span class="{% if inv.check_overdue %}text-danger fw-bold{% else %}text-muted{% endif %} small">
+                  {{ inv.due_date|date:"M d" }}
+                </span>
+              </td>
+              <td><strong class="text-white">${{ inv.balance_due }}</strong></td>
+              <td class="text-end">
+                <a href="{% url 'billing:invoice_detail' inv.pk %}" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
+                  <i class="bi bi-credit-card me-1"></i> Pay
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-4 text-muted">All invoices are settled! Great work.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 2: Subscriptions Due for Renewal Invoicing -->
+  <div class="col-lg-6">
+    <div class="table-card h-100">
+      <div class="card-header-bar p-3 border-bottom border-secondary-subtle d-flex align-items-center justify-content-between">
+        <div>
+          <h5 class="fw-bold text-white mb-0"><i class="bi bi-calendar-check me-2 text-info"></i>Subscriptions Due for Renewal</h5>
+          <span class="text-muted small">Contracts requiring recurring invoice generation</span>
+        </div>
+        <a href="{% url 'subscriptions:subscription_list' %}" class="small text-decoration-none fw-semibold" style="color: #818cf8;">
+          View All &rarr;
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Plan</th>
+              <th>Next Billing</th>
+              <th>Cycle Price</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub in workbench.upcoming_billing_subs %}
+            <tr>
+              <td>
+                <a href="{% url 'subscriptions:subscription_detail' sub.pk %}" class="fw-semibold text-white text-decoration-none d-block text-truncate" style="max-width: 130px;">
+                  {{ sub.customer.get_full_name|default:sub.customer.username }}
+                </a>
+                <span class="text-muted small" style="font-size: 0.72rem;">{{ sub.customer.company_name|default:"Individual" }}</span>
+              </td>
+              <td>
+                <span class="text-white small">{{ sub.plan.name }}</span>
+                <span class="badge bg-dark text-muted border border-secondary d-block mt-1" style="font-size: 0.68rem; width: fit-content;">
+                  {{ sub.plan.get_billing_cycle_display }}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-info-subtle text-info border border-info-subtle small">
+                  {{ sub.next_billing_date|date:"M d, Y" }}
+                </span>
+              </td>
+              <td><strong class="text-white">${{ sub.current_cycle_cost }}</strong></td>
+              <td class="text-end">
+                <form method="post" action="{% url 'subscriptions:subscription_generate_invoice' sub.pk %}" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-primary py-0 px-2" style="font-size: 0.75rem;" title="Generate Next Invoice">
+                    <i class="bi bi-receipt"></i> Bill
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-4 text-muted">No subscriptions due for renewal in the next 14 days.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Remittances -->
+<div class="row g-4">
+  <div class="col-12">
+    <div class="table-card">
+      <div class="card-header-bar p-3 border-bottom border-secondary-subtle d-flex align-items-center justify-content-between">
+        <div>
+          <h5 class="fw-bold text-white mb-0"><i class="bi bi-wallet2 me-2 text-success"></i>Recent Reconciled Payments</h5>
+          <span class="text-muted small">Latest incoming remittances across all customer accounts</span>
+        </div>
+        <a href="{% url 'billing:payment_list' %}" class="small text-decoration-none fw-semibold" style="color: #818cf8;">
+          Full Payment Ledger &rarr;
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Invoice</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Payment Method</th>
+              <th>Reference / Txn #</th>
+              <th>Date &amp; Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in workbench.recent_payments %}
+            <tr>
+              <td><code>#{{ payment.id }}</code></td>
+              <td>
+                <a href="{% url 'billing:invoice_detail' payment.invoice.pk %}" class="fw-semibold text-decoration-none" style="color: #818cf8;">
+                  {{ payment.invoice.invoice_number }}
+                </a>
+              </td>
+              <td>
+                <span class="text-white fw-semibold">
+                  {{ payment.invoice.subscription.customer.get_full_name|default:payment.invoice.subscription.customer.username }}
+                </span>
+              </td>
+              <td><strong style="color: #34d399;">+${{ payment.amount }}</strong></td>
+              <td><span class="badge bg-dark text-muted border border-secondary">{{ payment.get_method_display }}</span></td>
+              <td><code class="text-muted small">{{ payment.reference|default:"Direct" }}</code></td>
+              <td class="text-muted small">{{ payment.paid_on|date:"M d, Y - H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-4 text-muted">No payment records found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

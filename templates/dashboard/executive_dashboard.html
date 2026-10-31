@@ -1,15 +1,21 @@
-{% load static %}
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Revenue &amp; Subscription Dashboard{% endblock %}
 
 {% block content %}
 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
   <div>
-    <h3 class="fw-bold text-white mb-1">Executive Subscription Dashboard</h3>
-    <p class="text-muted small mb-0">Real-time metrics for Monthly Recurring Revenue (MRR), subscription lifecycles, and collections</p>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <h3 class="fw-bold text-white mb-0">Executive &amp; Admin Control Hub</h3>
+      <span class="badge role-badge-admin px-2 py-1"><i class="bi bi-shield-lock me-1"></i> System Admin</span>
+    </div>
+    <p class="text-muted small mb-0">High-level financial KPIs, revenue analytics, user directory, and platform controls</p>
   </div>
   <div class="d-flex gap-2">
+    <a href="{% url 'dashboard:staff_workbench' %}" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1">
+      <i class="bi bi-kanban"></i> Staff Workbench
+    </a>
     <a href="{% url 'subscriptions:subscription_create' %}" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center gap-1">
       <i class="bi bi-plus-lg"></i> New Subscription
     </a>
@@ -81,6 +87,95 @@
       <div class="display-6 fw-bold mb-1" style="color: #ffffff;">${{ summary.outstanding_amount }}</div>
       <div class="small" style="color: #94a3b8;">
         <span class="fw-bold" style="color: #fb7185;"><i class="bi bi-exclamation-circle me-1"></i> Overdue:</span> ${{ summary.overdue_amount }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin System Control & Resource Overview -->
+<div class="row g-3 mb-4">
+  <!-- System Directory Card -->
+  <div class="col-lg-6">
+    <div class="table-card p-3 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary-subtle pb-2">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-people text-primary fs-5"></i>
+          <div>
+            <h6 class="fw-bold text-white mb-0">User Directory &amp; RBAC</h6>
+            <span class="text-muted small" style="font-size: 0.75rem;">Access control role allocations</span>
+          </div>
+        </div>
+        <div class="d-flex gap-1">
+          <a href="{% url 'accounts:staff_create' %}" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
+            <i class="bi bi-person-plus me-1"></i> Add Staff
+          </a>
+          <a href="{% url 'accounts:user_list' %}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">
+            Manage All &rarr;
+          </a>
+        </div>
+      </div>
+      <div class="row g-2 text-center">
+        <div class="col-4">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);">
+            <div class="text-muted small" style="font-size: 0.7rem;">Administrators</div>
+            <div class="fs-5 fw-bold" style="color: #818cf8;">{{ admin_metrics.total_admins }}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);">
+            <div class="text-muted small" style="font-size: 0.7rem;">Staff Members</div>
+            <div class="fs-5 fw-bold" style="color: #38bdf8;">{{ admin_metrics.total_staff }}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);">
+            <div class="text-muted small" style="font-size: 0.7rem;">Customers</div>
+            <div class="fs-5 fw-bold" style="color: #34d399;">{{ admin_metrics.total_customers }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Catalog & Billing Configuration Card -->
+  <div class="col-lg-6">
+    <div class="table-card p-3 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary-subtle pb-2">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-box-seam text-info fs-5"></i>
+          <div>
+            <h6 class="fw-bold text-white mb-0">Catalog &amp; Pricing Inventory</h6>
+            <span class="text-muted small" style="font-size: 0.75rem;">Active product tiers and promotional rules</span>
+          </div>
+        </div>
+        <div class="d-flex gap-1">
+          <a href="{% url 'catalog:plan_create' %}" class="btn btn-sm btn-outline-info py-0 px-2" style="font-size: 0.75rem;">
+            <i class="bi bi-plus-lg me-1"></i> New Plan
+          </a>
+          <a href="{% url 'billing:discount_create' %}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">
+            <i class="bi bi-percent me-1"></i> Promo
+          </a>
+        </div>
+      </div>
+      <div class="row g-2 text-center">
+        <div class="col-4">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);">
+            <div class="text-muted small" style="font-size: 0.7rem;">Products</div>
+            <div class="fs-5 fw-bold text-white">{{ admin_metrics.total_products }}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);">
+            <div class="text-muted small" style="font-size: 0.7rem;">Subscription Plans</div>
+            <div class="fs-5 fw-bold" style="color: #38bdf8;">{{ admin_metrics.total_plans }}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);">
+            <div class="text-muted small" style="font-size: 0.7rem;">Discounts / Codes</div>
+            <div class="fs-5 fw-bold" style="color: #fbbf24;">{{ admin_metrics.total_discounts }}</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
