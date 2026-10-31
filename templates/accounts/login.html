@@ -5,70 +5,82 @@
 {% block content %}
 <div class="row justify-content-center py-4">
   <div class="col-md-6 col-lg-5 col-xl-4">
-    <div class="form-card">
+    <div class="form-card" style="box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(99, 102, 241, 0.15);">
       <div class="text-center mb-4">
-        <span class="brand-badge fs-5 mb-2 shadow-sm">
+        <a href="{% url 'dashboard:index' %}" class="brand-badge fs-5 mb-2 shadow-sm text-decoration-none">
           <i class="bi bi-arrow-repeat"></i> SubTrack
-        </span>
-        <h3 class="fw-bold text-dark mt-2">Welcome Back</h3>
-        <p class="text-muted small">Sign in to manage your subscriptions and billing</p>
+        </a>
+        <h3 class="fw-bold text-white mt-3 mb-1">Welcome Back</h3>
+        <p class="text-muted small">Sign in to manage your recurring billing and subscriptions</p>
       </div>
 
       <form method="post" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}
-          <div class="alert alert-danger py-2 small border-0 mb-3">
+          <div class="alert alert-danger py-2 small border-0 mb-3" style="background: rgba(244, 63, 94, 0.2); color: #fda4af;">
             {{ form.non_field_errors|striptags }}
           </div>
         {% endif %}
 
         <div class="mb-3">
-          <label class="form-label" for="id_username">Username</label>
+          <label class="form-label" for="id_username">Username or Email</label>
           <div class="input-group">
-            <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
             {{ form.username }}
           </div>
           {% if form.username.errors %}
-            <div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>
+            <div class="text-danger small mt-1" style="color: #fb7185 !important;">{{ form.username.errors|striptags }}</div>
           {% endif %}
         </div>
 
         <div class="mb-4">
           <label class="form-label" for="id_password">Password</label>
           <div class="input-group">
-            <span class="input-group-text bg-light text-muted"><i class="bi bi-key"></i></span>
+            <span class="input-group-text"><i class="bi bi-key"></i></span>
             {{ form.password }}
           </div>
           {% if form.password.errors %}
-            <div class="text-danger small mt-1">{{ form.password.errors|striptags }}</div>
+            <div class="text-danger small mt-1" style="color: #fb7185 !important;">{{ form.password.errors|striptags }}</div>
           {% endif %}
         </div>
 
-        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-          <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+          <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to SubTrack
         </button>
       </form>
 
-      <div class="mt-4 pt-3 border-top text-center">
+      <div class="mt-4 pt-3 border-top border-secondary-subtle text-center">
         <span class="text-muted small">Don't have an account?</span>
-        <a href="{% url 'accounts:register' %}" class="small fw-semibold text-primary text-decoration-none ms-1">Register as Customer</a>
+        <a href="{% url 'accounts:register' %}" class="small fw-semibold text-decoration-none ms-1" style="color: #818cf8;">Register as Customer</a>
       </div>
 
       <!-- Quick Demo Credentials helper box -->
-      <div class="mt-4 p-3 bg-light rounded-3 border">
+      <div class="mt-4 p-3 rounded-3 border border-secondary-subtle" style="background: rgba(15, 23, 42, 0.7);">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <span class="badge bg-primary-subtle text-primary fw-bold">Demo Logins</span>
+          <span class="badge role-badge-staff fw-bold"><i class="bi bi-lightning-charge-fill me-1"></i> Quick Demo Logins</span>
           <span class="text-muted" style="font-size: 0.72rem;">Click to auto-fill</span>
         </div>
-        <div class="d-grid gap-1">
-          <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 demo-fill-btn" data-user="admin" data-pass="admin123">
-            <strong class="text-dark">Admin:</strong> <code>admin</code> / <code>admin123</code>
+        <div class="d-grid gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm text-start py-2 px-3 demo-fill-btn d-flex align-items-center justify-content-between" data-user="admin" data-pass="admin123">
+            <div>
+              <span class="badge role-badge-admin me-2">Admin</span>
+              <strong class="text-white">admin</strong>
+            </div>
+            <code class="text-muted small">admin123</code>
           </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 demo-fill-btn" data-user="staff_priya" data-pass="staff123">
-            <strong class="text-dark">Staff:</strong> <code>staff_priya</code> / <code>staff123</code>
+          <button type="button" class="btn btn-outline-secondary btn-sm text-start py-2 px-3 demo-fill-btn d-flex align-items-center justify-content-between" data-user="staff_priya" data-pass="staff123">
+            <div>
+              <span class="badge role-badge-staff me-2">Staff</span>
+              <strong class="text-white">staff_priya</strong>
+            </div>
+            <code class="text-muted small">staff123</code>
           </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 demo-fill-btn" data-user="cust_arun" data-pass="cust123">
-            <strong class="text-dark">Customer:</strong> <code>cust_arun</code> / <code>cust123</code>
+          <button type="button" class="btn btn-outline-secondary btn-sm text-start py-2 px-3 demo-fill-btn d-flex align-items-center justify-content-between" data-user="cust_arun" data-pass="cust123">
+            <div>
+              <span class="badge role-badge-customer me-2">Customer</span>
+              <strong class="text-white">cust_arun</strong>
+            </div>
+            <code class="text-muted small">cust123</code>
           </button>
         </div>
       </div>

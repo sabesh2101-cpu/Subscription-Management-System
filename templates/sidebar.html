@@ -1,0 +1,133 @@
+{% load static %}
+<!-- Left Sidebar Navigation Component -->
+<aside class="app-sidebar" id="appSidebar">
+  <!-- Brand Header -->
+  <div class="sidebar-header">
+    <a href="{% url 'dashboard:index' %}" class="brand-badge">
+      <i class="bi bi-arrow-repeat"></i>
+      <span>SubTrack</span>
+    </a>
+    <span class="badge bg-dark text-muted border border-secondary" style="font-size: 0.68rem; font-weight: 600;">v2.0</span>
+  </div>
+
+  <!-- Navigation Links -->
+  <div class="sidebar-nav">
+    {% if user.is_authenticated %}
+    
+    <!-- Section: Overview -->
+    <div class="sidebar-section-title">Overview</div>
+    <a href="{% url 'dashboard:index' %}" class="sidebar-link {% if request.resolver_match.app_name == 'dashboard' and request.resolver_match.url_name == 'index' %}active{% endif %}">
+      <i class="bi bi-grid-1x2"></i>
+      <span>Dashboard</span>
+    </a>
+
+    <!-- Section: Operations -->
+    <div class="sidebar-section-title">Operations</div>
+    <a href="{% url 'subscriptions:subscription_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'subscriptions' %}active{% endif %}">
+      <i class="bi bi-arrow-repeat"></i>
+      <span>Subscriptions</span>
+    </a>
+    <a href="{% url 'catalog:product_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'catalog' and 'plan' not in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-boxes"></i>
+      <span>Products</span>
+    </a>
+    <a href="{% url 'catalog:plan_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'catalog' and 'plan' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-tags"></i>
+      <span>Subscription Plans</span>
+    </a>
+
+    <!-- Section: Billing & Finance -->
+    <div class="sidebar-section-title">Billing &amp; Finance</div>
+    <a href="{% url 'billing:invoice_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'billing' and 'discount' not in request.resolver_match.url_name and 'payment' not in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-receipt-cutoff"></i>
+      <span>Invoices</span>
+    </a>
+    <a href="{% url 'billing:payment_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'billing' and 'payment' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-credit-card-2-front"></i>
+      <span>Payment History</span>
+    </a>
+    {% if user.is_staff_role %}
+    <a href="{% url 'billing:discount_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'billing' and 'discount' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="bi bi-percent"></i>
+      <span>Discounts &amp; Promos</span>
+    </a>
+    <a href="{% url 'dashboard:msme_statistics' %}" class="sidebar-link {% if request.resolver_match.url_name == 'msme_statistics' %}active{% endif %}">
+      <i class="bi bi-bar-chart-line"></i>
+      <span>MSME Benchmarks</span>
+    </a>
+    {% endif %}
+
+    <!-- Section: Administration (Admin Only) -->
+    {% if user.is_admin_role %}
+    <div class="sidebar-section-title">Administration</div>
+    <a href="{% url 'accounts:user_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'user_list' %}active{% endif %}">
+      <i class="bi bi-people"></i>
+      <span>User Management</span>
+    </a>
+    <a href="{% url 'accounts:staff_create' %}" class="sidebar-link {% if request.resolver_match.app_name == 'accounts' and request.resolver_match.url_name == 'staff_create' %}active{% endif %}">
+      <i class="bi bi-person-plus"></i>
+      <span>Add Staff Member</span>
+    </a>
+    <a href="/admin/" target="_blank" class="sidebar-link">
+      <i class="bi bi-sliders"></i>
+      <span>Django Admin <i class="bi bi-box-arrow-up-right ms-auto" style="font-size: 0.75rem;"></i></span>
+    </a>
+    {% endif %}
+
+    {% else %}
+    <!-- Guest / Unauthenticated Navigation -->
+    <div class="sidebar-section-title">Account</div>
+    <a href="{% url 'accounts:login' %}" class="sidebar-link active">
+      <i class="bi bi-box-arrow-in-right"></i>
+      <span>Sign In</span>
+    </a>
+    <a href="{% url 'accounts:register' %}" class="sidebar-link">
+      <i class="bi bi-person-check"></i>
+      <span>Register Customer</span>
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- User Profile Drawer in Footer -->
+  {% if user.is_authenticated %}
+  <div class="sidebar-footer">
+    <div class="dropdown dropup w-100">
+      <button class="btn btn-transparent p-0 w-100 text-start d-flex align-items-center justify-content-between text-decoration-none shadow-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="d-flex align-items-center gap-2 overflow-hidden">
+          <div class="avatar-circle">
+            {{ user.username|make_list|first|upper }}
+          </div>
+          <div class="overflow-hidden">
+            <div class="text-white fw-bold small text-truncate" style="max-width: 130px;">
+              {{ user.get_full_name|default:user.username }}
+            </div>
+            <span class="badge {% if user.role == 'ADMIN' %}role-badge-admin{% elif user.role == 'STAFF' %}role-badge-staff{% else %}role-badge-customer{% endif %}" style="font-size: 0.65rem;">
+              {{ user.get_role_display }}
+            </span>
+          </div>
+        </div>
+        <i class="bi bi-chevron-expand text-muted"></i>
+      </button>
+
+      <ul class="dropdown-menu dropdown-menu-dark w-100 mb-2 py-2 shadow-lg" style="border-radius: 12px;">
+        <li class="px-3 py-2 border-bottom border-secondary-subtle">
+          <div class="small fw-bold text-white">{{ user.username }}</div>
+          <div class="small text-muted text-truncate">{{ user.email|default:"No email set" }}</div>
+        </li>
+        <li>
+          <a class="dropdown-item py-2" href="{% url 'accounts:profile' %}">
+            <i class="bi bi-person-gear me-2 text-primary"></i> My Profile
+          </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item py-2 text-danger" href="{% url 'accounts:logout' %}">
+            <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
