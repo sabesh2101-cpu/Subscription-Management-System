@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Subscription #{{ subscription.id }} - {{ subscription.plan.name }}{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex align-items-center justify-content-between">
+  <a href="{% url 'subscriptions:subscription_list' %}" class="text-decoration-none text-muted small">
+    <i class="bi bi-arrow-left me-1"></i> Back to Subscriptions
+  </a>
+  <div class="d-flex align-items-center gap-2">
+    {% if user.is_staff_role %}
+    <!-- Generate Invoice Button -->
+    <form method="post" action="{% url 'subscriptions:subscription_generate_invoice' subscription.pk %}" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success btn-sm shadow-sm" onclick="return confirm('Generate a new recurring invoice for this subscription?');">
+        <i class="bi bi-receipt me-1"></i> Generate Invoice
+      </button>
+    </form>
+
+    <a href="{% url 'subscriptions:subscription_update' subscription.pk %}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-pencil me-1"></i> Edit
+    </a>
+    {% endif %}
+
+    {% if user.is_admin_role %}
+    <a href="{% url 'subscriptions:subscription_delete' subscription.pk %}" class="btn btn-outline-danger btn-sm">
+      <i class="bi bi-trash me-1"></i> Delete
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Subscription Overview -->
+  <div class="col-lg-7">
+    <div class="form-card h-100">
+      <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+        <div>
+          <span class="badge bg-light text-secondary border">Subscription #{{ subscription.id }}</span>
+          <h4 class="fw-bold text-dark mt-1 mb-0">{{ subscription.plan.name }}</h4>
+          <span class="text-muted small"><i class="bi bi-box me-1"></i> {{ subscription.plan.product.name }}</span>
+        </div>
+        <div>
+          {% if subscription.status == 'ACTIVE' %}
+          <span class="badge-status status-active fs-6"><i class="bi bi-check-circle-fill"></i> Active</span>
+          {% elif subscription.status == 'PAUSED' %}
+          <span class="badge-status status-paused fs-6"><i class="bi bi-pause-circle-fill"></i> Paused</span>
+          {% elif subscription.status == 'CANCELLED' %}
+          <span class="badge-status status-cancelled fs-6"><i class="bi bi-x-circle-fill"></i> Cancelled</span>
+          {% elif subscription.status == 'DRAFT' %}
+          <span class="badge-status status-draft fs-6"><i class="bi bi-file-earmark"></i> Draft</span>
+          {% else %}
+          <span class="badge-status status-cancelled fs-6">{{ subscription.get_status_display }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Lifecycle Action Buttons for Staff/Admin -->
+      {% if user.is_staff_role %}
+      <div class="p-3 bg-light rounded-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-2 border">
+        <span class="small fw-semibold text-secondary">Lifecycle Controls:</span>
+        <div class="d-flex gap-2">
+          {% if subscription.status != 'ACTIVE' and subscription.status != 'CANCELLED' %}
+          <form method="post" action="{% url 'subscriptions:subscription_status_action' subscription.pk 'activate' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-sm">
+              <i class="bi bi-play-circle me-1"></i> Activate
+            </button>
+          </form>
+          {% endif %}
+
+          {% if subscription.status == 'ACTIVE' %}
+          <form method="post" action="{% url 'subscriptions:subscription_status_action' subscription.pk 'pause' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning btn-sm text-dark">
+              <i class="bi bi-pause-circle me-1"></i> Pause
+            </button>
+          </form>
+          {% endif %}
+
+          {% if subscription.status != 'CANCELLED' %}
+          <form method="post" action="{% url 'subscriptions:subscription_status_action' subscription.pk 'cancel' %}" onsubmit="return confirm('Are you sure you want to cancel this subscription?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-x-circle me-1"></i> Cancel Subscription
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+          <div class="p-3 border rounded-3 bg-white">
+            <span class="text-muted small d-block">Customer</span>
+            <strong class="text-dark fs-6">{{ subscription.customer.get_full_name|default:subscription.customer.username }}</strong>
+            {% if subscription.customer.company_name %}
+            <div class="text-muted small">{{ subscription.customer.company_name }}</div>
+            {% endif %}
+            <div class="text-muted small"><i class="bi bi-envelope me-1"></i> {{ subscription.customer.email }}</div>
+          </div>
+        </div>
+
+        <div class="col-sm-6">
+          <div class="p-3 border rounded-3 bg-white">
+            <span class="text-muted small d-block">Billing Cycle</span>
+            <strong class="text-dark fs-6">{{ subscription.plan.get_billing_cycle_display }}</strong>
+            <div class="text-muted small">Next renewal: <strong>{{ subscription.next_billing_date|default:"N/A" }}</strong></div>
+            <div class="text-muted small">Started: {{ subscription.start_date|date:"M d, Y" }}</div>
+          </div>
+        </div>
+      </div>
+
+      {% if subscription.notes %}
+      <div class="mb-3">
+        <h6 class="small text-uppercase fw-bold text-muted">Notes / Terms</h6>
+        <p class="small text-secondary bg-light p-3 rounded-3">{{ subscription.notes }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pricing Breakdown -->
+  <div class="col-lg-5">
+    <div class="form-card h-100">
+      <h5 class="fw-bold text-dark mb-3">Pricing &amp; Value</h5>
+
+      <div class="list-group list-group-flush mb-4">
+        <div class="list-group-item d-flex justify-content-between px-0 py-2">
+          <span class="text-muted">Plan Base Price</span>
+          <strong class="text-dark">${{ subscription.plan.price }}</strong>
+        </div>
+
+        {% if subscription.discount %}
+        <div class="list-group-item d-flex justify-content-between px-0 py-2 text-success">
+          <span>
+            <i class="bi bi-tag-fill me-1"></i> Discount (<code>{{ subscription.discount.code }}</code>)
+          </span>
+          <strong>-{{ subscription.discount.value }}{% if subscription.discount.type == 'PERCENT' %}%{% else %}${% endif %}</strong>
+        </div>
+        {% endif %}
+
+        <div class="list-group-item d-flex justify-content-between px-0 py-3 border-top">
+          <span class="fw-bold text-dark fs-6">Recurring Cycle Total</span>
+          <span class="display-6 fw-bold text-primary fs-3">${{ subscription.current_cycle_cost }}</span>
+        </div>
+
+        <div class="list-group-item d-flex justify-content-between px-0 py-2 bg-light rounded-3 px-3 mt-2">
+          <span class="text-muted small">MRR Contribution</span>
+          <strong class="text-indigo small">${{ subscription.mrr_contribution }} / month</strong>
+        </div>
+      </div>
+
+      <div class="alert alert-info py-2 small border-0 mb-0">
+        <i class="bi bi-info-circle me-1"></i>
+        Invoices are generated based on the recurring billing cycle ({{ subscription.plan.get_billing_cycle_display }}).
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Linked Invoices Table -->
+<div class="table-card">
+  <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+    <div>
+      <h5 class="fw-bold text-dark mb-0">Generated Invoices</h5>
+      <span class="text-muted small">Billing history for this subscription</span>
+    </div>
+    {% if user.is_staff_role %}
+    <form method="post" action="{% url 'subscriptions:subscription_generate_invoice' subscription.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> New Invoice
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Issue Date</th>
+          <th>Due Date</th>
+          <th>Total</th>
+          <th>Paid</th>
+          <th>Balance Due</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in subscription.invoices.all %}
+        <tr>
+          <td>
+            <a href="{% url 'billing:invoice_detail' inv.pk %}" class="fw-bold text-primary text-decoration-none">
+              {{ inv.invoice_number }}
+            </a>
+          </td>
+          <td>{{ inv.issue_date|date:"M d, Y" }}</td>
+          <td>
+            <span class="{% if inv.check_overdue %}text-danger fw-bold{% endif %}">
+              {{ inv.due_date|date:"M d, Y" }}
+            </span>
+          </td>
+          <td><strong>${{ inv.total }}</strong></td>
+          <td class="text-success">${{ inv.total_paid }}</td>
+          <td>
+            {% if inv.balance_due > 0 %}
+            <span class="text-danger fw-bold">${{ inv.balance_due }}</span>
+            {% else %}
+            <span class="text-muted">$0.00</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if inv.status == 'PAID' %}
+            <span class="badge-status status-paid">Paid</span>
+            {% elif inv.status == 'OVERDUE' or inv.check_overdue %}
+            <span class="badge-status status-overdue">Overdue</span>
+            {% elif inv.status == 'SENT' %}
+            <span class="badge-status status-draft">Unpaid</span>
+            {% else %}
+            <span class="badge-status status-draft">{{ inv.get_status_display }}</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <a href="{% url 'billing:invoice_detail' inv.pk %}" class="btn btn-outline-secondary" title="View Details">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="{% url 'billing:invoice_print' inv.pk %}" class="btn btn-outline-secondary" title="Print Invoice" target="_blank">
+                <i class="bi bi-printer"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center py-4 text-muted">
+            No invoices have been generated for this subscription yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

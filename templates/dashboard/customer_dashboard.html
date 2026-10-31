@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}My Customer Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Customer Portal</h3>
+    <p class="text-muted small mb-0">Welcome back, {{ user.get_full_name|default:user.username }}. Review your active subscriptions and invoices.</p>
+  </div>
+  <a href="{% url 'catalog:plan_list' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-compass me-1"></i> Browse Available Plans
+  </a>
+</div>
+
+<!-- Customer Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="kpi-card">
+      <div class="kpi-accent-bar bg-success"></div>
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-semibold text-uppercase">Active Subscriptions</span>
+        <div class="kpi-icon-wrap bg-success-subtle text-success">
+          <i class="bi bi-card-checklist"></i>
+        </div>
+      </div>
+      <div class="display-6 fw-bold text-dark mb-1">{{ active_subscriptions }}</div>
+      <div class="text-muted small">Out of {{ total_subscriptions }} total contracts</div>
+    </div>
+  </div>
+
+  <div class="col-sm-4">
+    <div class="kpi-card">
+      <div class="kpi-accent-bar bg-danger"></div>
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-semibold text-uppercase">Amount Due</span>
+        <div class="kpi-icon-wrap bg-danger-subtle text-danger">
+          <i class="bi bi-receipt"></i>
+        </div>
+      </div>
+      <div class="display-6 fw-bold {% if unpaid_total > 0 %}text-danger{% else %}text-dark{% endif %} mb-1">${{ unpaid_total }}</div>
+      <div class="text-muted small">{{ unpaid_count }} unpaid invoice{{ unpaid_count|pluralize }}</div>
+    </div>
+  </div>
+
+  <div class="col-sm-4">
+    <div class="kpi-card">
+      <div class="kpi-accent-bar bg-primary"></div>
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-semibold text-uppercase">Total Paid to Date</span>
+        <div class="kpi-icon-wrap bg-primary-subtle text-primary">
+          <i class="bi bi-wallet2"></i>
+        </div>
+      </div>
+      <div class="display-6 fw-bold text-dark mb-1">${{ total_paid }}</div>
+      <div class="text-muted small">Lifetime successful payments</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Active Subscriptions -->
+  <div class="col-lg-6">
+    <div class="table-card h-100">
+      <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+        <h5 class="fw-bold text-dark mb-0">My Subscriptions</h5>
+        <a href="{% url 'subscriptions:subscription_list' %}" class="small text-primary text-decoration-none fw-semibold">View All &rarr;</a>
+      </div>
+
+      <div class="p-3">
+        {% for sub in active_subs_list %}
+        <div class="p-3 border rounded-3 mb-2 bg-light d-flex justify-content-between align-items-center">
+          <div>
+            <strong class="text-dark d-block">{{ sub.plan.name }}</strong>
+            <span class="text-muted small"><i class="bi bi-box me-1"></i> {{ sub.plan.product.name }} &bull; ${{ sub.current_cycle_cost }} / {{ sub.plan.get_billing_cycle_display }}</span>
+          </div>
+          <div class="text-end">
+            <span class="badge-status status-active d-block mb-1">Active</span>
+            <span class="text-muted small" style="font-size: 0.75rem;">Next: {{ sub.next_billing_date|date:"M d, Y" }}</span>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-4 text-muted">
+          <p class="mb-2">You don't have any active subscriptions yet.</p>
+          <a href="{% url 'catalog:plan_list' %}" class="btn btn-outline-primary btn-sm">Explore Plans</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Invoices -->
+  <div class="col-lg-6">
+    <div class="table-card h-100">
+      <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+        <h5 class="fw-bold text-dark mb-0">Recent Invoices</h5>
+        <a href="{% url 'billing:invoice_list' %}" class="small text-primary text-decoration-none fw-semibold">View All &rarr;</a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Due Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in recent_invoices %}
+            <tr>
+              <td>
+                <a href="{% url 'billing:invoice_detail' inv.pk %}" class="fw-semibold text-primary text-decoration-none">
+                  {{ inv.invoice_number }}
+                </a>
+              </td>
+              <td>{{ inv.due_date|date:"M d, Y" }}</td>
+              <td><strong>${{ inv.total }}</strong></td>
+              <td>
+                {% if inv.status == 'PAID' %}
+                <span class="badge-status status-paid" style="font-size: 0.7rem;">Paid</span>
+                {% elif inv.check_overdue %}
+                <span class="badge-status status-overdue" style="font-size: 0.7rem;">Overdue</span>
+                {% else %}
+                <span class="badge-status status-draft" style="font-size: 0.7rem;">Unpaid</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'billing:invoice_detail' inv.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">
+                  View
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-4 text-muted">No invoices found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

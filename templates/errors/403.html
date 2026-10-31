@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Access Denied (403){% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+  <div class="col-md-7 col-lg-5 text-center">
+    <div class="p-5 bg-white rounded-4 shadow-sm border">
+      <div class="text-danger mb-3" style="font-size: 4rem;">
+        <i class="bi bi-shield-x"></i>
+      </div>
+      <h2 class="fw-bold text-dark mb-2">403 - Access Forbidden</h2>
+      <p class="text-muted mb-4">
+        You do not have permission to access this resource or perform this action. Your current role is <strong>{{ request.user.get_role_display|default:"Anonymous" }}</strong>.
+      </p>
+      <div class="d-flex justify-content-center gap-2">
+        <a href="{% url 'dashboard:index' %}" class="btn btn-primary px-4">
+          <i class="bi bi-house me-1"></i> Return to Dashboard
+        </a>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary px-3">
+          <i class="bi bi-arrow-left me-1"></i> Go Back
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

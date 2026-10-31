@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment History{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Payment History</h3>
+    <p class="text-muted small mb-0">Record of all received remittances and payment transactions</p>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+  <div class="card-body p-3">
+    <form method="get" class="row g-2 align-items-center">
+      <div class="col-md-5">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search reference, invoice number, customer...">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <select name="method" class="form-select">
+          <option value="">All Payment Methods</option>
+          <option value="CARD" {% if method_filter == 'CARD' %}selected{% endif %}>Credit / Debit Card</option>
+          <option value="UPI" {% if method_filter == 'UPI' %}selected{% endif %}>UPI</option>
+          <option value="BANK_TRANSFER" {% if method_filter == 'BANK_TRANSFER' %}selected{% endif %}>Bank Transfer / NEFT</option>
+          <option value="CASH" {% if method_filter == 'CASH' %}selected{% endif %}>Cash</option>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-dark w-100"><i class="bi bi-funnel me-1"></i> Filter</button>
+        {% if search_query or method_filter %}
+        <a href="{% url 'billing:payment_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Payment #</th>
+          <th>Invoice #</th>
+          <th>Customer</th>
+          <th>Amount Paid</th>
+          <th>Method</th>
+          <th>Reference / Txn ID</th>
+          <th>Paid On</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for payment in payments %}
+        <tr>
+          <td><span class="badge bg-light text-secondary border">#{{ payment.id }}</span></td>
+          <td>
+            <a href="{% url 'billing:invoice_detail' payment.invoice.pk %}" class="fw-bold text-primary text-decoration-none">
+              {{ payment.invoice.invoice_number }}
+            </a>
+          </td>
+          <td>
+            <strong class="text-dark">{{ payment.invoice.subscription.customer.get_full_name|default:payment.invoice.subscription.customer.username }}</strong>
+            {% if payment.invoice.subscription.customer.company_name %}
+            <div class="text-muted small">{{ payment.invoice.subscription.customer.company_name }}</div>
+            {% endif %}
+          </td>
+          <td><strong class="text-success fs-6">${{ payment.amount }}</strong></td>
+          <td>
+            <span class="badge bg-secondary-subtle text-secondary">{{ payment.get_method_display }}</span>
+          </td>
+          <td><code>{{ payment.reference|default:"-" }}</code></td>
+          <td class="text-muted small">{{ payment.paid_on|date:"M d, Y H:i" }}</td>
+          <td>
+            <span class="badge-status status-paid"><i class="bi bi-check-circle-fill"></i> Success</span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center py-5 text-muted">
+            <i class="bi bi-credit-card-2-front display-6 d-block mb-2 text-secondary"></i>
+            No payment records found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include 'pagination.html' %}
+{% endblock %}

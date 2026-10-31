@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit {{ object.name }}{% else %}New Product{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-8 col-lg-7">
+    <div class="form-card">
+      <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
+        <div>
+          <h4 class="fw-bold text-dark mb-1">{% if object %}Edit Product{% else %}Add New Product{% endif %}</h4>
+          <p class="text-muted small mb-0">Specify product title, unique SKU code, and default base price</p>
+        </div>
+        <span class="badge role-badge-admin px-3 py-2"><i class="bi bi-shield-lock me-1"></i> Admin</span>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2 small border-0 mb-3">{{ form.non_field_errors|striptags }}</div>
+        {% endif %}
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="id_sku">SKU Code *</label>
+            {{ form.sku }}
+            {% if form.sku.errors %}<div class="text-danger small">{{ form.sku.errors|striptags }}</div>{% endif %}
+            <div class="form-text small">Unique inventory or product reference.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="id_price">Base Price ($) *</label>
+            {{ form.price }}
+            {% if form.price.errors %}<div class="text-danger small">{{ form.price.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="id_name">Product Name *</label>
+          {{ form.name }}
+          {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors|striptags }}</div>{% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="id_description">Description</label>
+          {{ form.description }}
+          {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors|striptags }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4 form-check">
+          {{ form.is_active }}
+          <label class="form-check-label fw-semibold text-dark" for="id_is_active">
+            Active in catalog (visible to customers)
+          </label>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+          <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i> {% if object %}Save Changes{% else %}Create Product{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

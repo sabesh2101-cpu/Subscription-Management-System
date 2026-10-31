@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Discounts &amp; Promo Codes{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Discounts &amp; Promotional Codes</h3>
+    <p class="text-muted small mb-0">Manage customer promotional vouchers, percent reductions and usage limits</p>
+  </div>
+  {% if user.is_admin_role %}
+  <a href="{% url 'billing:discount_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i> New Discount Code
+  </a>
+  {% endif %}
+</div>
+
+<!-- Interactive Apply-Code Check Box -->
+<div class="card border-0 shadow-sm rounded-3 mb-4 bg-primary-subtle border border-primary-subtle">
+  <div class="card-body p-3">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <i class="bi bi-tag-fill text-primary"></i>
+      <h6 class="fw-bold text-dark mb-0">Discount Code Validator &amp; Live Calculator</h6>
+    </div>
+    <div class="row g-2 align-items-center">
+      <div class="col-md-4">
+        <input type="text" id="test-code-input" class="form-control text-uppercase fw-semibold" placeholder="Enter code (e.g. MSME25)">
+      </div>
+      <div class="col-md-3">
+        <div class="input-group">
+          <span class="input-group-text bg-white text-muted">$</span>
+          <input type="number" id="test-subtotal-input" class="form-control" value="100.00" step="0.01" min="0" placeholder="Sample Subtotal">
+        </div>
+      </div>
+      <div class="col-md-2">
+        <button type="button" id="test-check-btn" class="btn btn-primary w-100">
+          <i class="bi bi-check-circle me-1"></i> Validate
+        </button>
+      </div>
+      <div class="col-md-3">
+        <div id="test-result-box" class="small p-2 rounded bg-white border text-muted" style="min-height: 38px; display: flex; align-items: center;">
+          Enter code and click Validate
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Discount Type &amp; Value</th>
+          <th>Validity Range</th>
+          <th>Usage Limit</th>
+          <th>Times Used</th>
+          <th>Status</th>
+          {% if user.is_admin_role %}<th class="text-end">Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for discount in discounts %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-light text-primary border px-2 py-1 fs-6">
+                <code>{{ discount.code }}</code>
+              </span>
+            </div>
+          </td>
+          <td>
+            {% if discount.type == 'PERCENT' %}
+            <strong class="text-dark">{{ discount.value }}% Off</strong>
+            <span class="badge bg-info-subtle text-info ms-1">Percentage</span>
+            {% else %}
+            <strong class="text-dark">${{ discount.value }} Flat Off</strong>
+            <span class="badge bg-secondary-subtle text-secondary ms-1">Fixed</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="small text-muted">{{ discount.valid_from|date:"M d, Y" }} &rarr; {{ discount.valid_to|date:"M d, Y" }}</span>
+          </td>
+          <td>
+            {% if discount.usage_limit %}
+            <span class="text-dark fw-semibold">{{ discount.usage_limit }} max</span>
+            {% else %}
+            <span class="text-muted small">Unlimited</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge bg-light text-dark border">{{ discount.times_used }} used</span>
+          </td>
+          <td>
+            {% if discount.is_active %}
+            <span class="badge-status status-active"><i class="bi bi-check-circle-fill"></i> Active</span>
+            {% else %}
+            <span class="badge-status status-cancelled"><i class="bi bi-x-circle-fill"></i> Inactive</span>
+            {% endif %}
+          </td>
+          {% if user.is_admin_role %}
+          <td class="text-end">
+            <div class="btn-group btn-group-sm">
+              <a href="{% url 'billing:discount_update' discount.pk %}" class="btn btn-outline-primary" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a href="{% url 'billing:discount_delete' discount.pk %}" class="btn btn-outline-danger" title="Delete">
+                <i class="bi bi-trash"></i>
+              </a>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-4 text-muted">
+            No discount codes configured.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include 'pagination.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('test-check-btn').addEventListener('click', function() {
+    const code = document.getElementById('test-code-input').value.trim();
+    const subtotal = document.getElementById('test-subtotal-input').value.trim();
+    const resultBox = document.getElementById('test-result-box');
+
+    if (!code) {
+      resultBox.innerHTML = '<span class="text-danger">Please enter a code.</span>';
+      return;
+    }
+
+    resultBox.innerHTML = '<span class="text-muted"><i class="bi bi-arrow-repeat spin"></i> Checking...</span>';
+
+    fetch(`{% url 'billing:discount_check' %}?code=${encodeURIComponent(code)}&subtotal=${encodeURIComponent(subtotal)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.valid) {
+          resultBox.innerHTML = `<span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i> -$${data.discount_amount} off (Total: $${data.final_total})</span>`;
+        } else {
+          resultBox.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i> ${data.message}</span>`;
+        }
+      })
+      .catch(err => {
+        resultBox.innerHTML = '<span class="text-danger">Error validating code.</span>';
+      });
+  });
+</script>
+{% endblock %}

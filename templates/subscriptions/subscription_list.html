@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Subscriptions{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-1">Customer Subscriptions</h3>
+    <p class="text-muted small mb-0">Track active recurring contracts, renewal milestones and statuses</p>
+  </div>
+  {% if user.is_staff_role %}
+  <a href="{% url 'subscriptions:subscription_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i> New Subscription
+  </a>
+  {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+  <div class="card-body p-3">
+    <form method="get" class="row g-2 align-items-center">
+      <div class="col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search customer, plan, product...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select name="status" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active</option>
+          <option value="DRAFT" {% if status_filter == 'DRAFT' %}selected{% endif %}>Draft</option>
+          <option value="PAUSED" {% if status_filter == 'PAUSED' %}selected{% endif %}>Paused</option>
+          <option value="CANCELLED" {% if status_filter == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+          <option value="EXPIRED" {% if status_filter == 'EXPIRED' %}selected{% endif %}>Expired</option>
+        </select>
+      </div>
+      {% if user.is_staff_role %}
+      <div class="col-md-3">
+        <select name="customer" class="form-select">
+          <option value="">All Customers</option>
+          {% for c in all_customers %}
+          <option value="{{ c.id }}" {% if customer_filter == c.id|stringformat:"s" %}selected{% endif %}>{{ c.username }} ({{ c.company_name|default:c.get_full_name }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+      {% else %}
+      <div class="col-md-5 d-flex gap-2">
+      {% endif %}
+        <button type="submit" class="btn btn-dark w-100"><i class="bi bi-funnel me-1"></i> Filter</button>
+        {% if search_query or status_filter or customer_filter %}
+        <a href="{% url 'subscriptions:subscription_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Sub ID / Customer</th>
+          <th>Plan &amp; Product</th>
+          <th>Cycle Price</th>
+          <th>Next Billing</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub in subscriptions %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-light text-secondary border">#{{ sub.id }}</span>
+              <div>
+                <a href="{% url 'subscriptions:subscription_detail' sub.pk %}" class="fw-bold text-dark text-decoration-none hover-primary">
+                  {{ sub.customer.username }}
+                </a>
+                {% if sub.customer.company_name %}
+                <div class="text-muted small">{{ sub.customer.company_name }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td>
+            <strong class="text-dark">{{ sub.plan.name }}</strong>
+            <div class="text-muted small"><i class="bi bi-box me-1"></i> {{ sub.plan.product.name }}</div>
+          </td>
+          <td>
+            <strong class="text-dark">${{ sub.current_cycle_cost }}</strong>
+            <span class="text-muted small">/ {{ sub.plan.get_billing_cycle_display }}</span>
+            {% if sub.discount %}
+            <div class="small text-success"><i class="bi bi-tag-fill me-1"></i> {{ sub.discount.code }} applied</div>
+            {% endif %}
+          </td>
+          <td>
+            {% if sub.next_billing_date %}
+            <span class="text-dark fw-semibold">{{ sub.next_billing_date|date:"M d, Y" }}</span>
+            {% else %}
+            <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if sub.status == 'ACTIVE' %}
+            <span class="badge-status status-active"><i class="bi bi-check-circle-fill"></i> Active</span>
+            {% elif sub.status == 'PAUSED' %}
+            <span class="badge-status status-paused"><i class="bi bi-pause-circle-fill"></i> Paused</span>
+            {% elif sub.status == 'CANCELLED' %}
+            <span class="badge-status status-cancelled"><i class="bi bi-x-circle-fill"></i> Cancelled</span>
+            {% elif sub.status == 'DRAFT' %}
+            <span class="badge-status status-draft"><i class="bi bi-file-earmark"></i> Draft</span>
+            {% else %}
+            <span class="badge-status status-cancelled">{{ sub.get_status_display }}</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{% url 'subscriptions:subscription_detail' sub.pk %}" class="btn btn-sm btn-outline-secondary" title="View Details">
+              <i class="bi bi-eye"></i> Details
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-5 text-muted">
+            <i class="bi bi-card-list display-6 d-block mb-2 text-secondary"></i>
+            No subscriptions found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include 'pagination.html' %}
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Discount {{ object.code }}{% else %}New Discount Code{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-8 col-lg-7">
+    <div class="form-card">
+      <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
+        <div>
+          <h4 class="fw-bold text-dark mb-1">{% if object %}Edit Discount Voucher{% else %}Create Discount Voucher{% endif %}</h4>
+          <p class="text-muted small mb-0">Set coupon code, deduction percentage or fixed amount, and validity dates</p>
+        </div>
+        <span class="badge role-badge-admin px-3 py-2"><i class="bi bi-shield-lock me-1"></i> Admin</span>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2 small border-0 mb-3">{{ form.non_field_errors|striptags }}</div>
+        {% endif %}
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="id_code">Discount Code *</label>
+            {{ form.code }}
+            {% if form.code.errors %}<div class="text-danger small">{{ form.code.errors|striptags }}</div>{% endif %}
+            <div class="form-text small">Automatically uppercased (e.g. FLASH20).</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="id_type">Discount Type *</label>
+            {{ form.type }}
+            {% if form.type.errors %}<div class="text-danger small">{{ form.type.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="id_value">Value *</label>
+            {{ form.value }}
+            {% if form.value.errors %}<div class="text-danger small">{{ form.value.errors|striptags }}</div>{% endif %}
+            <div class="form-text small">Enter percentage (1-100) or flat dollar amount.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="id_usage_limit">Max Total Uses</label>
+            {{ form.usage_limit }}
+            {% if form.usage_limit.errors %}<div class="text-danger small">{{ form.usage_limit.errors|striptags }}</div>{% endif %}
+            <div class="form-text small">Leave blank for unlimited redemptions.</div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="id_valid_from">Valid From Date *</label>
+            {{ form.valid_from }}
+            {% if form.valid_from.errors %}<div class="text-danger small">{{ form.valid_from.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="id_valid_to">Valid Until Date *</label>
+            {{ form.valid_to }}
+            {% if form.valid_to.errors %}<div class="text-danger small">{{ form.valid_to.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="mb-4 form-check">
+          {{ form.is_active }}
+          <label class="form-check-label fw-semibold text-dark" for="id_is_active">
+            Discount is Active and Available for Application
+          </label>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+          <a href="{% url 'billing:discount_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i> {% if object %}Save Changes{% else %}Create Discount{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

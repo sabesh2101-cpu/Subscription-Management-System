@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+  <a href="{% url 'billing:invoice_list' %}" class="text-decoration-none text-muted small">
+    <i class="bi bi-arrow-left me-1"></i> Back to Invoices
+  </a>
+  <div class="d-flex align-items-center gap-2">
+    <a href="{% url 'billing:invoice_print' invoice.pk %}" target="_blank" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-printer me-1"></i> Print Invoice
+    </a>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Invoice Information & Items -->
+  <div class="col-lg-8">
+    <div class="form-card mb-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between pb-3 mb-4 border-bottom gap-2">
+        <div>
+          <span class="badge bg-light text-secondary border">Invoice</span>
+          <h3 class="fw-bold text-dark mt-1 mb-0">{{ invoice.invoice_number }}</h3>
+          <span class="text-muted small">Subscription: <a href="{% url 'subscriptions:subscription_detail' invoice.subscription.pk %}" class="text-primary text-decoration-none">#{{ invoice.subscription.id }} ({{ invoice.subscription.plan.name }})</a></span>
+        </div>
+        <div>
+          {% if invoice.status == 'PAID' %}
+          <span class="badge-status status-paid fs-6"><i class="bi bi-check-circle-fill"></i> Paid</span>
+          {% elif invoice.status == 'OVERDUE' or invoice.check_overdue %}
+          <span class="badge-status status-overdue fs-6"><i class="bi bi-exclamation-triangle-fill"></i> Overdue</span>
+          {% elif invoice.status == 'SENT' %}
+          <span class="badge-status status-draft fs-6"><i class="bi bi-clock-history"></i> Sent / Unpaid</span>
+          {% elif invoice.status == 'CANCELLED' %}
+          <span class="badge-status status-cancelled fs-6"><i class="bi bi-x-circle-fill"></i> Cancelled</span>
+          {% else %}
+          <span class="badge-status status-draft fs-6">{{ invoice.get_status_display }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+          <div class="p-3 border rounded-3 bg-light">
+            <span class="text-muted small d-block">Billed To</span>
+            <strong class="text-dark fs-6">{{ invoice.subscription.customer.get_full_name|default:invoice.subscription.customer.username }}</strong>
+            {% if invoice.subscription.customer.company_name %}
+            <div class="text-muted small">{{ invoice.subscription.customer.company_name }}</div>
+            {% endif %}
+            <div class="text-muted small"><i class="bi bi-envelope me-1"></i> {{ invoice.subscription.customer.email }}</div>
+            {% if invoice.subscription.customer.address %}
+            <div class="text-muted small mt-1"><i class="bi bi-geo-alt me-1"></i> {{ invoice.subscription.customer.address }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-sm-6">
+          <div class="p-3 border rounded-3 bg-light">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted small">Issue Date:</span>
+              <strong class="text-dark small">{{ invoice.issue_date|date:"F d, Y" }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="text-muted small">Due Date:</span>
+              <strong class="{% if invoice.check_overdue %}text-danger{% else %}text-dark{% endif %} small">{{ invoice.due_date|date:"F d, Y" }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted small">Billing Cycle:</span>
+              <strong class="text-dark small">{{ invoice.subscription.plan.get_billing_cycle_display }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line Items Table -->
+      <h6 class="fw-bold text-dark mb-2">Itemized Charges</h6>
+      <div class="table-responsive border rounded-3 mb-4">
+        <table class="table mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Description</th>
+              <th>Billing Frequency</th>
+              <th class="text-end">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong class="text-dark">{{ invoice.subscription.plan.product.name }}</strong>
+                <div class="text-muted small">{{ invoice.subscription.plan.name }} (SKU: {{ invoice.subscription.plan.product.sku }})</div>
+              </td>
+              <td>{{ invoice.subscription.plan.get_billing_cycle_display }}</td>
+              <td class="text-end fw-semibold text-dark">${{ invoice.subtotal }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Financial Totals -->
+      <div class="row justify-content-end">
+        <div class="col-md-6 col-lg-5">
+          <div class="list-group list-group-flush">
+            <div class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Subtotal</span>
+              <span class="fw-semibold text-dark">${{ invoice.subtotal }}</span>
+            </div>
+
+            {% if invoice.discount_amount > 0 %}
+            <div class="list-group-item d-flex justify-content-between px-0 py-2 text-success">
+              <span><i class="bi bi-tag-fill me-1"></i> Discount Applied</span>
+              <span class="fw-semibold">-${{ invoice.discount_amount }}</span>
+            </div>
+            {% endif %}
+
+            {% if invoice.tax_amount > 0 %}
+            <div class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Taxes</span>
+              <span class="fw-semibold text-dark">${{ invoice.tax_amount }}</span>
+            </div>
+            {% endif %}
+
+            <div class="list-group-item d-flex justify-content-between px-0 py-3 border-top">
+              <span class="fw-bold text-dark fs-5">Total Invoice</span>
+              <span class="fw-bold text-primary fs-4">${{ invoice.total }}</span>
+            </div>
+
+            <div class="list-group-item d-flex justify-content-between px-0 py-2 text-success">
+              <span class="small">Total Paid</span>
+              <span class="fw-semibold small">${{ invoice.total_paid }}</span>
+            </div>
+
+            <div class="list-group-item d-flex justify-content-between px-0 py-2 bg-light rounded-3 px-3 mt-1">
+              <span class="fw-bold {% if invoice.balance_due > 0 %}text-danger{% else %}text-muted{% endif %}">Balance Due</span>
+              <span class="fw-bold {% if invoice.balance_due > 0 %}text-danger{% else %}text-success{% endif %} fs-5">${{ invoice.balance_due }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Recording Form & Balance Sidebar -->
+  <div class="col-lg-4">
+    {% if user.is_staff_role and invoice.balance_due > 0 %}
+    <!-- Record Payment Card -->
+    <div class="form-card mb-4 border-primary">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-bold text-dark mb-0">Record Payment</h5>
+        <span class="badge bg-primary-subtle text-primary">Staff Action</span>
+      </div>
+      <p class="text-muted small mb-3">Register a received payment against this invoice. It will auto-mark as PAID if the balance is cleared.</p>
+
+      <form method="post" action="{% url 'billing:invoice_record_payment' invoice.pk %}" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label" for="id_amount">Amount ($) *</label>
+          {{ payment_form.amount }}
+          <div class="form-text small">Remaining balance: <strong>${{ invoice.balance_due }}</strong></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="id_method">Payment Method *</label>
+          {{ payment_form.method }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="id_reference">Transaction / Ref ID</label>
+          {{ payment_form.reference }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="id_paid_on">Payment Date &amp; Time</label>
+          {{ payment_form.paid_on }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="id_notes">Memo / Notes</label>
+          {{ payment_form.notes }}
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 py-2 fw-semibold">
+          <i class="bi bi-check2-circle me-1"></i> Confirm &amp; Apply Payment
+        </button>
+      </form>
+    </div>
+    {% elif invoice.balance_due == 0 %}
+    <div class="form-card mb-4 bg-success-subtle border-success text-center py-4">
+      <div class="text-success mb-2" style="font-size: 3rem;">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+      <h5 class="fw-bold text-success mb-1">Invoice Fully Paid</h5>
+      <p class="text-muted small mb-0">All charges for this cycle have been settled in full.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Payment History List -->
+<div class="table-card">
+  <div class="p-3 border-bottom">
+    <h5 class="fw-bold text-dark mb-0">Payment History for this Invoice</h5>
+    <span class="text-muted small">Recorded transactions reconciled with invoice {{ invoice.invoice_number }}</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Payment #</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Reference</th>
+          <th>Paid Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for payment in invoice.payments.all %}
+        <tr>
+          <td><span class="badge bg-light text-secondary border">#{{ payment.id }}</span></td>
+          <td><strong class="text-success fs-6">${{ payment.amount }}</strong></td>
+          <td><span class="badge bg-secondary-subtle text-secondary">{{ payment.get_method_display }}</span></td>
+          <td><code>{{ payment.reference|default:"-" }}</code></td>
+          <td class="text-muted small">{{ payment.paid_on|date:"M d, Y H:i" }}</td>
+          <td>
+            <span class="badge-status status-paid"><i class="bi bi-check-circle-fill"></i> Success</span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">
+            No payments recorded for this invoice yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

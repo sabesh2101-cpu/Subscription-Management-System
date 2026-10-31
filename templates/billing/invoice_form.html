@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Custom Invoice{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-8 col-lg-7">
+    <div class="form-card">
+      <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
+        <div>
+          <h4 class="fw-bold text-dark mb-1">Create Invoice</h4>
+          <p class="text-muted small mb-0">Manually issue an invoice for a customer subscription</p>
+        </div>
+        <span class="badge role-badge-staff px-3 py-2"><i class="bi bi-people me-1"></i> Staff / Admin</span>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2 small border-0 mb-3">{{ form.non_field_errors|striptags }}</div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label" for="id_subscription">Subscription *</label>
+          {{ form.subscription }}
+          {% if form.subscription.errors %}<div class="text-danger small">{{ form.subscription.errors|striptags }}</div>{% endif %}
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="id_issue_date">Issue Date *</label>
+            {{ form.issue_date }}
+            {% if form.issue_date.errors %}<div class="text-danger small">{{ form.issue_date.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="id_due_date">Due Date *</label>
+            {{ form.due_date }}
+            {% if form.due_date.errors %}<div class="text-danger small">{{ form.due_date.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label" for="id_subtotal">Subtotal ($) *</label>
+            {{ form.subtotal }}
+            {% if form.subtotal.errors %}<div class="text-danger small">{{ form.subtotal.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="id_discount_amount">Discount ($)</label>
+            {{ form.discount_amount }}
+            {% if form.discount_amount.errors %}<div class="text-danger small">{{ form.discount_amount.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="id_tax_amount">Taxes ($)</label>
+            {{ form.tax_amount }}
+            {% if form.tax_amount.errors %}<div class="text-danger small">{{ form.tax_amount.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="id_status">Status *</label>
+            {{ form.status }}
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="id_notes">Invoice Notes / Memo</label>
+          {{ form.notes }}
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+          <a href="{% url 'billing:invoice_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-lg me-1"></i> Issue Invoice
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
