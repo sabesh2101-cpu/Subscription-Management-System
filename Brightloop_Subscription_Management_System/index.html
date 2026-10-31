@@ -1,44 +1,435 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brightloop - Subscription Manager</title>
+  <title>Odoo · Brightloop Subscription Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="brand"><span class="brand-mark">B</span><div><b>brightloop</b><small>SUBSCRIPTION MANAGER</small></div></div>
-    <nav>
-      <button class="nav-link active" data-page="dashboard">▦ <span>Dashboard</span></button>
-      <button class="nav-link" data-page="subscriptions">▤ <span>Subscriptions</span></button>
-      <button class="nav-link" data-page="products">◇ <span>Products & Plans</span></button>
-      <button class="nav-link" data-page="customers">♙ <span>Customers</span></button>
-      <button class="nav-link" data-page="invoices">▧ <span>Invoices</span></button>
-      <button class="nav-link" data-page="payments">⇄ <span>Payments</span></button>
-      <button class="nav-link" data-page="discounts">％ <span>Discounts</span></button>
-      <button class="nav-link" data-page="reports">▥ <span>Reports</span></button>
-    </nav>
-    <div class="sidebar-bottom"><div class="avatar">A</div><div><b>Admin User</b><small>Administrator</small></div></div>
-  </aside>
+  <!-- ================= AUTHENTICATION VIEW (STARTS HERE) ================= -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-container">
+      <!-- Odoo & Brightloop Co-Branded Header -->
+      <div class="auth-brand-banner">
+        <div class="odoo-logo-badge">
+          <span class="odoo-text">odoo</span>
+          <span class="odoo-edition">Enterprise</span>
+        </div>
+        <div class="brand-divider"></div>
+        <div class="brightloop-brand">
+          <div class="brightloop-mark">B</div>
+          <div>
+            <div class="brightloop-title">Brightloop Software</div>
+            <div class="brightloop-tagline">Subscription & Recurring Billing Platform</div>
+          </div>
+        </div>
+      </div>
 
-  <main class="main">
-    <header class="topbar">
-      <div><div class="eyebrow">BRIGHTLOOP SOFTWARE</div><h1 id="page-title">Dashboard</h1></div>
-      <div class="top-actions"><span class="status-dot"></span><span>System online</span><button class="profile">AU</button></div>
-    </header>
-    <section id="page-content"></section>
-    <footer>Brightloop Subscription Manager <span>Simple demo · Data saved in this browser</span></footer>
-  </main>
+      <!-- Auth Card -->
+      <div class="auth-card">
+        <!-- Auth Tabs: Sign In / Sign Up -->
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" id="tab-sign-in" onclick="switchAuthTab('signin')">Sign In</button>
+          <button type="button" class="auth-tab" id="tab-sign-up" onclick="switchAuthTab('signup')">New Customer Sign Up</button>
+        </div>
 
-  <dialog id="entry-dialog">
-    <form id="entry-form" method="dialog">
-      <div class="dialog-head"><div><div class="eyebrow">ADD NEW</div><h2 id="dialog-title">New item</h2></div><button type="button" class="close" id="close-dialog">×</button></div>
-      <div id="form-fields" class="form-grid"></div>
-      <div class="dialog-actions"><button type="button" class="btn secondary" id="cancel-dialog">Cancel</button><button class="btn primary" value="save">Save item</button></div>
+        <!-- Sign In Form -->
+        <div id="signin-pane" class="auth-pane active">
+          <div class="auth-pane-head">
+            <h3>Welcome to Brightloop</h3>
+            <p class="muted">Access your admin console, staff billing desk, or customer portal.</p>
+          </div>
+
+          <form id="login-form" class="auth-form" onsubmit="event.preventDefault(); submitLogin();">
+            <div class="field full">
+              <label for="login-email">Registered Email</label>
+              <input type="email" id="login-email" required placeholder="name@company.com" autocomplete="email" value="admin@brightloop.com">
+            </div>
+
+            <div class="field full">
+              <div class="field-label-row">
+                <label for="login-password">Password</label>
+                <button type="button" class="btn-text-action" onclick="openForgotPasswordModal()">Forgot Password?</button>
+              </div>
+              <div class="password-wrap">
+                <input type="password" id="login-password" required placeholder="Enter password" autocomplete="current-password" value="Admin@1234">
+                <button type="button" class="toggle-pw-btn" onclick="togglePasswordVisibility('login-password')">Show</button>
+              </div>
+            </div>
+
+            <div class="auth-options-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="login-remember" checked>
+                <span>Remember session</span>
+              </label>
+              <span class="role-hint">Protected by RBAC</span>
+            </div>
+
+            <button type="submit" class="btn btn-odoo auth-btn">
+              <span>Sign In</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </form>
+
+          <!-- 1-Click Role Logins for Testing -->
+          <div class="quick-roles-card">
+            <div class="quick-roles-title">⚡ Quick Sign-In by Role (Problem Statement Personas)</div>
+            <div class="quick-roles-grid">
+              <button type="button" class="role-pill-btn admin" onclick="quickLogin('admin')">
+                <div class="role-pill-icon">👑</div>
+                <div class="role-pill-text">
+                  <strong>Admin User</strong>
+                  <small>Full controls & staff setup</small>
+                </div>
+              </button>
+
+              <button type="button" class="role-pill-btn staff" onclick="quickLogin('staff')">
+                <div class="role-pill-icon">💼</div>
+                <div class="role-pill-text">
+                  <strong>Internal Staff</strong>
+                  <small>Quotes, billing & renewals</small>
+                </div>
+              </button>
+
+              <button type="button" class="role-pill-btn customer" onclick="quickLogin('customer')">
+                <div class="role-pill-icon">👤</div>
+                <div class="role-pill-text">
+                  <strong>Customer Portal</strong>
+                  <small>Northstar Retail self-service</small>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sign Up Form (Customer Sign Up with Strict Password Validation) -->
+        <div id="signup-pane" class="auth-pane">
+          <div class="auth-pane-head">
+            <h3>Create Customer Account</h3>
+            <p class="muted">Sign up your business to explore and manage Brightloop subscriptions.</p>
+          </div>
+
+          <form id="signup-form" class="auth-form" onsubmit="event.preventDefault(); submitSignUp();">
+            <div class="field full">
+              <label for="signup-name">Company / Contact Name <span class="required">*</span></label>
+              <input type="text" id="signup-name" required placeholder="e.g. Apex Innovations Ltd">
+            </div>
+
+            <div class="field full">
+              <label for="signup-email">Business Email <span class="required">* (Unique)</span></label>
+              <input type="email" id="signup-email" required placeholder="contact@company.com" autocomplete="email">
+              <span class="field-note" id="email-unique-msg">Each email can belong to only one account.</span>
+            </div>
+
+            <div class="field full">
+              <label for="signup-password">Password <span class="required">*</span></label>
+              <div class="password-wrap">
+                <input type="password" id="signup-password" required placeholder="Create secure password" oninput="validatePasswordStrength(this.value)">
+                <button type="button" class="toggle-pw-btn" onclick="togglePasswordVisibility('signup-password')">Show</button>
+              </div>
+
+              <!-- Real-time Password Rules Compliance Checklist as required by Problem Statement -->
+              <div class="pw-rules-box" id="pw-rules-box">
+                <div class="pw-rule-item" id="rule-len">
+                  <span class="rule-icon">○</span>
+                  <span>More than 8 characters</span>
+                </div>
+                <div class="pw-rule-item" id="rule-upper">
+                  <span class="rule-icon">○</span>
+                  <span>At least one uppercase letter (A-Z)</span>
+                </div>
+                <div class="pw-rule-item" id="rule-lower">
+                  <span class="rule-icon">○</span>
+                  <span>At least one lowercase letter (a-z)</span>
+                </div>
+                <div class="pw-rule-item" id="rule-special">
+                  <span class="rule-icon">○</span>
+                  <span>At least one special character (!@#$%^&*...)</span>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-odoo auth-btn" id="btn-submit-signup">
+              <span>Create Account & Enter Portal</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="auth-footer-tag">
+        Built according to the Odoo Subscription Management System specification
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Reset Link Modal (Problem Statement Scene 3) -->
+  <dialog id="reset-password-dialog" class="app-modal">
+    <div class="dialog-header">
+      <div>
+        <div class="eyebrow">ACCOUNT RECOVERY</div>
+        <h2>Reset Forgotten Password</h2>
+      </div>
+      <button type="button" class="btn-icon close-btn" onclick="$('#reset-password-dialog').close()">×</button>
+    </div>
+    <form onsubmit="event.preventDefault(); sendPasswordResetLink();">
+      <p class="muted" style="margin-bottom:14px">
+        Enter your registered email address and we will generate a secure reset link.
+      </p>
+      <div class="field full">
+        <label for="reset-email">Registered Email</label>
+        <input type="email" id="reset-email" required placeholder="name@company.com" value="hello@northstar.com">
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" onclick="$('#reset-password-dialog').close()">Cancel</button>
+        <button type="submit" class="btn btn-odoo">Send Reset Link</button>
+      </div>
     </form>
   </dialog>
-  <div id="toast" class="toast"></div>
+
+
+  <!-- ================= MAIN APPLICATION WORKSPACE (AFTER LOGIN) ================= -->
+  <div id="app-layout" class="app-layout" style="display:none">
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Brand Header -->
+      <div class="brand">
+        <div class="odoo-mini-mark">odoo</div>
+        <div class="brand-text">
+          <span class="brand-title">Brightloop</span>
+          <span class="brand-sub">SUBSCRIPTION SYSTEM</span>
+        </div>
+      </div>
+
+      <!-- Role Pill indicator in sidebar -->
+      <div class="user-role-badge-row">
+        <span class="active-role-pill" id="sidebar-role-indicator">👑 Administrator</span>
+      </div>
+
+      <!-- Navigation links (dynamically rendered/filtered by user role) -->
+      <nav class="nav-menu" id="main-nav-menu">
+        <!-- Rendered dynamically by app.js based on role: Admin, Staff, or Customer -->
+      </nav>
+
+      <!-- Sidebar Bottom Profile & Controls -->
+      <div class="sidebar-bottom">
+        <div class="quick-tools">
+          <button class="tool-btn" id="btn-billing-day" title="Execute automatic batch billing">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Billing Day Run</span>
+          </button>
+          <button class="tool-btn" id="btn-data-tools" title="Data Backup & Reset">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            <span>Tools</span>
+          </button>
+        </div>
+
+        <div class="user-profile">
+          <div class="avatar" id="sidebar-avatar">AU</div>
+          <div class="user-meta">
+            <span class="user-name" id="sidebar-user-name">Admin User</span>
+            <span class="user-role" id="sidebar-user-role">Administrator</span>
+          </div>
+          <button class="logout-btn" id="btn-logout" title="Sign Out of Brightloop" aria-label="Sign Out">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <main class="main" id="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle Navigation">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div>
+            <div class="eyebrow" id="page-eyebrow">BRIGHTLOOP · ODOO</div>
+            <h1 id="page-title">Dashboard</h1>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Role switch helper for quick testing -->
+          <div class="role-selector-wrap">
+            <span class="role-label">Switch Role:</span>
+            <select id="role-quick-switcher" class="role-select" onchange="switchRole(this.value)">
+              <option value="admin">Admin (Full)</option>
+              <option value="staff">Staff (Sales/Billing)</option>
+              <option value="customer">Customer Portal</option>
+            </select>
+          </div>
+
+          <!-- Quick Action -->
+          <button class="btn btn-odoo btn-sm" id="btn-quick-new" title="Quick create item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="btn-text" id="btn-quick-new-text">+ New Record</span>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button class="theme-toggle" id="theme-toggle" title="Toggle Theme" aria-label="Toggle Theme">
+            <span class="theme-icon sun">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </span>
+            <span class="theme-icon moon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic Page Container -->
+      <section id="page-content" class="content-container"></section>
+
+      <!-- App Footer -->
+      <footer class="app-footer">
+        <div class="footer-left">
+          <strong>Odoo · Brightloop Subscription Management System</strong>
+        </div>
+        <div class="footer-right">
+          <span>Response latency: &lt; 200ms</span>
+          <button class="footer-link-btn" onclick="openDataToolsModal()">Database Manager</button>
+        </div>
+      </footer>
+    </main>
+  </div> <!-- /app-layout -->
+
+
+  <!-- ================= MODALS & DIALOGS ================= -->
+
+  <!-- Universal CRUD Entry/Edit Dialog -->
+  <dialog id="entry-dialog" class="app-modal">
+    <form id="entry-form" method="dialog">
+      <div class="dialog-header">
+        <div>
+          <div class="eyebrow" id="dialog-eyebrow">RECORD FORM</div>
+          <h2 id="dialog-title">New Item</h2>
+        </div>
+        <button type="button" class="btn-icon close-btn" id="close-dialog" aria-label="Close dialog">×</button>
+      </div>
+      <div id="form-fields" class="form-grid"></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="cancel-dialog">Cancel</button>
+        <button type="submit" class="btn btn-odoo" id="save-dialog-btn">Save Record</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Detailed View Modal (Branded Tax Invoice / Customer 360 / Quote Inspector) -->
+  <dialog id="detail-dialog" class="app-modal detail-modal">
+    <div class="dialog-header">
+      <div>
+        <div class="eyebrow" id="detail-eyebrow">DOCUMENT VIEWER</div>
+        <h2 id="detail-title">Record Details</h2>
+      </div>
+      <div class="detail-head-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="detail-print-btn" onclick="window.print()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+          <span>Print Document</span>
+        </button>
+        <button type="button" class="btn-icon close-btn" id="close-detail-dialog" onclick="$('#detail-dialog').close()">×</button>
+      </div>
+    </div>
+    <div id="detail-content" class="detail-body"></div>
+  </dialog>
+
+  <!-- Billing Day Batch Execution Confirmation Modal (Problem Statement Page 3) -->
+  <dialog id="billing-day-dialog" class="app-modal">
+    <div class="dialog-header">
+      <div>
+        <div class="eyebrow">AUTOMATED BILLING DAY</div>
+        <h2>Batch Subscription Invoicing</h2>
+      </div>
+      <button type="button" class="btn-icon close-btn" onclick="$('#billing-day-dialog').close()">×</button>
+    </div>
+    <div class="billing-day-body">
+      <div class="billing-day-banner">
+        <div class="billing-icon">📅</div>
+        <div>
+          <h4>Generate Invoices Due Today</h4>
+          <p class="muted">
+            Scans all <strong>Active</strong> subscriptions. Pre-fills customer details, product lines, taxes, and applies active discount rules automatically. Prevents double-billing.
+          </p>
+        </div>
+      </div>
+      <div id="billing-due-preview" style="margin:16px 0"></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" onclick="$('#billing-day-dialog').close()">Cancel</button>
+        <button type="button" class="btn btn-odoo" id="btn-execute-billing-day" onclick="executeBillingDay()">
+          Run Batch Billing
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Danger / Confirm Action Dialog -->
+  <dialog id="confirm-dialog" class="app-modal confirm-modal">
+    <div class="confirm-content">
+      <div class="confirm-icon danger">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3 id="confirm-title">Are you sure?</h3>
+      <p id="confirm-message">This action cannot be undone.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirm-proceed">Confirm</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Database Tools Modal -->
+  <dialog id="data-dialog" class="app-modal">
+    <div class="dialog-header">
+      <div>
+        <div class="eyebrow">DATABASE MANAGER</div>
+        <h2>Data Management</h2>
+      </div>
+      <button type="button" class="btn-icon close-btn" onclick="$('#data-dialog').close()">×</button>
+    </div>
+    <div class="data-tools-body">
+      <div class="data-tool-card">
+        <div class="tool-info">
+          <h4>Export Database JSON</h4>
+          <p>Download full snapshot of subscriptions, quotation templates, products, and invoices.</p>
+        </div>
+        <button class="btn btn-odoo btn-sm" onclick="exportDatabaseJSON()">Export JSON</button>
+      </div>
+
+      <div class="data-tool-card">
+        <div class="tool-info">
+          <h4>Restore Database</h4>
+          <p>Import a previously saved JSON snapshot.</p>
+        </div>
+        <label class="btn btn-secondary btn-sm file-input-label">
+          <input type="file" id="import-json-input" accept=".json" style="display:none" onchange="importDatabaseJSON(event)">
+          Upload JSON
+        </label>
+      </div>
+
+      <div class="data-tool-card danger-card">
+        <div class="tool-info">
+          <h4>Reset to Default Problem Statement Data</h4>
+          <p>Restores Brightloop Software products, Odoo variants, quotation templates, and seed users.</p>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="resetToDemoData()">Reset Data</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast Center -->
+  <div id="toast" class="toast" role="alert">
+    <span class="toast-icon" id="toast-icon"></span>
+    <span class="toast-message" id="toast-msg"></span>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
