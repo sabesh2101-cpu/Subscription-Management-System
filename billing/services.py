@@ -1,9 +1,10 @@
+import datetime
 from datetime import timedelta
 from decimal import Decimal
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from .models import Invoice, Payment
+from .models import Invoice, Payment, to_date
 
 
 def generate_invoice_for_subscription(subscription, issue_date=None, due_date=None, tax_rate=Decimal('0.00'), notes=''):
@@ -11,10 +12,11 @@ def generate_invoice_for_subscription(subscription, issue_date=None, due_date=No
     Generates a new Invoice for a given subscription using plan pricing,
     applying any valid discount and optional tax.
     """
-    if not issue_date:
-        issue_date = timezone.now().date()
+    issue_date = to_date(issue_date) or timezone.localdate()
     if not due_date:
         due_date = issue_date + timedelta(days=15)
+    else:
+        due_date = to_date(due_date)
 
     subtotal = subscription.plan.price
     discount_amount = Decimal('0.00')

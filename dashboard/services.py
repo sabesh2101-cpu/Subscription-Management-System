@@ -1,4 +1,5 @@
 import calendar
+import datetime
 from decimal import Decimal
 from datetime import date, timedelta
 from django.db.models import Sum, Count, Q
@@ -102,13 +103,14 @@ def get_dashboard_summary():
 
     outstanding_amount = Decimal('0.00')
     overdue_amount = Decimal('0.00')
-    today = timezone.now().date()
+    today = timezone.localdate()
 
     for inv in unpaid_invoices:
         bal = inv.balance_due
         if bal > Decimal('0.00'):
             outstanding_amount += bal
-            if inv.status == Invoice.STATUS_OVERDUE or inv.due_date < today:
+            due = inv.due_date.date() if isinstance(inv.due_date, datetime.datetime) else inv.due_date
+            if inv.status == Invoice.STATUS_OVERDUE or (due and due < today):
                 overdue_amount += bal
 
     recent_payments = Payment.objects.filter(

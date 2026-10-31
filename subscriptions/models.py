@@ -7,8 +7,17 @@ from django.utils import timezone
 from catalog.models import SubscriptionPlan
 
 
+def to_date(val):
+    if val is None:
+        return None
+    if isinstance(val, datetime.datetime):
+        return val.date()
+    return val
+
+
 def compute_next_billing_date(from_date, billing_cycle):
     """Computes next billing date based on cycle with end-of-month clamping."""
+    from_date = to_date(from_date) or timezone.localdate()
     year = from_date.year
     month = from_date.month
     day = from_date.day
@@ -56,7 +65,7 @@ class Subscription(models.Model):
         on_delete=models.PROTECT,
         related_name='subscriptions'
     )
-    start_date = models.DateField(default=timezone.now)
+    start_date = models.DateField(default=timezone.localdate)
     next_billing_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
@@ -78,17 +87,25 @@ class Subscription(models.Model):
 
     def clean(self):
         super().clean()
-        if self.start_date and self.end_date and self.end_date < self.start_date:
+        start_date = to_date(self.start_date)
+        end_date = to_date(self.end_date)
+        if start_date and end_date and end_date < start_date:
             raise ValidationError({'end_date': 'End date cannot be earlier than start date.'})
         if self.discount:
-            is_valid, reason = self.discount.is_currently_valid(self.start_date)
+            is_valid, reason = self.discount.is_currently_valid(start_date)
             if not is_valid:
                 raise ValidationError({'discount': f"Selected discount cannot be applied: {reason}"})
 
     def save(self, *args, **kwargs):
         if not self.start_date:
-            self.start_date = timezone.now().date()
-        if not self.next_billing_date and self.plan:
+            self.start_date = timezone.localdate()
+        else:
+            self.start_date = to_date(self.start_date)
+        if self.end_date:
+            self.end_date = to_date(self.end_date)
+        if self.next_billing_date:
+            self.next_billing_date = to_date(self.next_billing_date)
+        elif self.plan:
             self.next_billing_date = compute_next_billing_date(self.start_date, self.plan.billing_cycle)
         super().save(*args, **kwargs)
 
@@ -122,7 +139,7 @@ class Subscription(models.Model):
     def activate(self):
         self.status = self.STATUS_ACTIVE
         if not self.next_billing_date:
-            self.next_billing_date = compute_next_billing_date(timezone.now().date(), self.plan.billing_cycle)
+            self.next_billing_date = compute_next_billing_date(timezone.localdate(), self.plan.billing_cycle)
         self.save(update_fields=['status', 'next_billing_date', 'updated_at'])
 
     def pause(self):
@@ -131,7 +148,7 @@ class Subscription(models.Model):
 
     def cancel(self):
         self.status = self.STATUS_CANCELLED
-        self.end_date = timezone.now().date()
+        self.end_date = timezone.localdate()
         self.save(update_fields=['status', 'end_date', 'updated_at'])
 
     def __str__(self):

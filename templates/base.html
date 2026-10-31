@@ -55,7 +55,7 @@
       <div class="d-flex align-items-center gap-3">
         <span class="badge bg-secondary-subtle text-secondary border">Prototype Mode</span>
         <a href="{% url 'dashboard:index' %}" class="text-decoration-none text-muted">Dashboard</a>
-        {% if user.is_staff_role %}
+        {% if user.is_authenticated and user.is_staff_role %}
         <a href="{% url 'dashboard:msme_statistics' %}" class="text-decoration-none text-muted">MSME Data</a>
         {% endif %}
       </div>

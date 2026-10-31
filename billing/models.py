@@ -1,8 +1,17 @@
+import datetime
 from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+
+
+def to_date(val):
+    if val is None:
+        return None
+    if isinstance(val, datetime.datetime):
+        return val.date()
+    return val
 
 
 class Discount(models.Model):
@@ -22,7 +31,7 @@ class Discount(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text="Percentage (e.g. 10 for 10%) or Fixed dollar discount"
     )
-    valid_from = models.DateField(default=timezone.now)
+    valid_from = models.DateField(default=timezone.localdate)
     valid_to = models.DateField()
     is_active = models.BooleanField(default=True)
     usage_limit = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum total redemptions (leave blank for unlimited)")
@@ -38,7 +47,9 @@ class Discount(models.Model):
         super().clean()
         if self.code:
             self.code = self.code.strip().upper()
-        if self.valid_from and self.valid_to and self.valid_from > self.valid_to:
+        valid_from = to_date(self.valid_from)
+        valid_to = to_date(self.valid_to)
+        if valid_from and valid_to and valid_from > valid_to:
             raise ValidationError({'valid_to': 'Valid To date must be on or after Valid From date.'})
         if self.type == self.TYPE_PERCENT and self.value is not None:
             if self.value <= Decimal('0.00') or self.value > Decimal('100.00'):
@@ -50,15 +61,21 @@ class Discount(models.Model):
     def save(self, *args, **kwargs):
         if self.code:
             self.code = self.code.strip().upper()
+        if self.valid_from:
+            self.valid_from = to_date(self.valid_from)
+        if self.valid_to:
+            self.valid_to = to_date(self.valid_to)
         super().save(*args, **kwargs)
 
     def is_currently_valid(self, for_date=None):
-        target_date = for_date or timezone.now().date()
+        target_date = to_date(for_date) or timezone.localdate()
+        valid_from = to_date(self.valid_from)
+        valid_to = to_date(self.valid_to)
         if not self.is_active:
             return False, "Discount code is inactive."
-        if target_date < self.valid_from:
-            return False, f"Discount code is not valid until {self.valid_from}."
-        if target_date > self.valid_to:
+        if valid_from and target_date < valid_from:
+            return False, f"Discount code is not valid until {valid_from}."
+        if valid_to and target_date > valid_to:
             return False, "Discount code has expired."
         if self.usage_limit is not None and self.times_used >= self.usage_limit:
             return False, "Discount code usage limit has been reached."
@@ -98,7 +115,7 @@ class Invoice(models.Model):
         on_delete=models.CASCADE,
         related_name='invoices'
     )
-    issue_date = models.DateField(default=timezone.now)
+    issue_date = models.DateField(default=timezone.localdate)
     due_date = models.DateField()
     subtotal = models.DecimalField(
         max_digits=10,
@@ -149,7 +166,9 @@ class Invoice(models.Model):
 
     def clean(self):
         super().clean()
-        if self.issue_date and self.due_date and self.due_date < self.issue_date:
+        issue_date = to_date(self.issue_date)
+        due_date = to_date(self.due_date)
+        if issue_date and due_date and due_date < issue_date:
             raise ValidationError({'due_date': 'Due date cannot be before issue date.'})
         if self.subtotal is not None and self.subtotal < Decimal('0.00'):
             raise ValidationError({'subtotal': 'Subtotal cannot be negative.'})
@@ -159,8 +178,13 @@ class Invoice(models.Model):
             raise ValidationError({'tax_amount': 'Tax amount cannot be negative.'})
 
     def save(self, *args, **kwargs):
+        if self.issue_date:
+            self.issue_date = to_date(self.issue_date)
+        if self.due_date:
+            self.due_date = to_date(self.due_date)
         if not self.invoice_number:
-            year = self.issue_date.year if self.issue_date else timezone.now().year
+            issue_date = to_date(self.issue_date)
+            year = issue_date.year if issue_date else timezone.now().year
             self.invoice_number = self.generate_next_invoice_number(year)
         # Ensure total is calculated correctly if not explicitly set
         if self.total is None:
@@ -180,7 +204,8 @@ class Invoice(models.Model):
 
     @property
     def check_overdue(self):
-        if self.status in [self.STATUS_SENT, self.STATUS_DRAFT] and self.due_date < timezone.now().date():
+        due_date = to_date(self.due_date)
+        if due_date and self.status in [self.STATUS_SENT, self.STATUS_DRAFT] and due_date < timezone.localdate():
             return True
         return self.status == self.STATUS_OVERDUE
 
