@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brightloop - Subscription Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">B</span><div><b>brightloop</b><small>SUBSCRIPTION MANAGER</small></div></div>
+    <nav>
+      <button class="nav-link active" data-page="dashboard">▦ <span>Dashboard</span></button>
+      <button class="nav-link" data-page="subscriptions">▤ <span>Subscriptions</span></button>
+      <button class="nav-link" data-page="products">◇ <span>Products & Plans</span></button>
+      <button class="nav-link" data-page="customers">♙ <span>Customers</span></button>
+      <button class="nav-link" data-page="invoices">▧ <span>Invoices</span></button>
+      <button class="nav-link" data-page="payments">⇄ <span>Payments</span></button>
+      <button class="nav-link" data-page="discounts">％ <span>Discounts</span></button>
+      <button class="nav-link" data-page="reports">▥ <span>Reports</span></button>
+    </nav>
+    <div class="sidebar-bottom"><div class="avatar">A</div><div><b>Admin User</b><small>Administrator</small></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><div class="eyebrow">BRIGHTLOOP SOFTWARE</div><h1 id="page-title">Dashboard</h1></div>
+      <div class="top-actions"><span class="status-dot"></span><span>System online</span><button class="profile">AU</button></div>
+    </header>
+    <section id="page-content"></section>
+    <footer>Brightloop Subscription Manager <span>Simple demo · Data saved in this browser</span></footer>
+  </main>
+
+  <dialog id="entry-dialog">
+    <form id="entry-form" method="dialog">
+      <div class="dialog-head"><div><div class="eyebrow">ADD NEW</div><h2 id="dialog-title">New item</h2></div><button type="button" class="close" id="close-dialog">×</button></div>
+      <div id="form-fields" class="form-grid"></div>
+      <div class="dialog-actions"><button type="button" class="btn secondary" id="cancel-dialog">Cancel</button><button class="btn primary" value="save">Save item</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
