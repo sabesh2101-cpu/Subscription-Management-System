@@ -10,8 +10,8 @@ Brightloop Software sells everything on subscription: business software billed b
 
 This platform replaces fragmented spreadsheets, manual billing, and remembered renewals with a unified digital backbone featuring:
 - **Role-Based Access Control (RBAC)** for Administrators, Internal Staff, and Customer Self-Service Portals.
-- **Strict Customer Sign-Up & Password Validation** ($> 8$ characters, uppercase, lowercase, special character, and unique email check).
-- **Products & Brand Variants** (e.g. Standard vs. Odoo Brand $+₹560$).
+- **Strict Customer Sign-Up & Password Validation** (> 8 characters, uppercase, lowercase, special character, and unique email check).
+- **Products & Brand Variants** (e.g. Standard vs. Odoo Brand +₹560).
 - **Flexible Plans & Frequencies** (Daily, Weekly, Monthly, Yearly) with auto-close lifecycle rules.
 - **Quotation Templates** to launch offers and turn quotes into subscriptions.
 - **5-Stage Subscription Lifecycle**: `Draft` ➔ `Quotation` ➔ `Confirmed` ➔ `Active` ➔ `Closed`.
@@ -37,7 +37,7 @@ The system provides 1-click demo sign-in and credential authentication for all t
 
 ### 1. Authentication & Security
 - **Authentication Gateway**: Web application starts on the co-branded Odoo login screen before granting access to workspace data.
-- **Customer Sign Up Validation**: Live password validation enforcing $> 8$ characters, uppercase letter, lowercase letter, and special character.
+- **Customer Sign Up Validation**: Live password validation enforcing > 8 characters, uppercase letter, lowercase letter, and special character.
 - **Unique Account Email**: Guarantees each email belongs to only one account.
 - **Password Reset Flow**: Simulated reset link dispatch.
 
@@ -70,7 +70,7 @@ The system provides 1-click demo sign-in and credential authentication for all t
 - Active subscriptions count and breakdown.
 - Realized cash collected across UPI, Card, and Bank Transfer.
 - Outstanding receivables and list of overdue invoices.
-- Instant response latency ($< 200\text{ms}$).
+- Instant response latency (< 200ms).
 - Complete CSV export on every table view and JSON database backup/restore.
 
 ---
